@@ -1,0 +1,66 @@
+
+
+
+
+%macro mult_macro_defn (data_nm );
+/* Taking list of variables in the dataset along with type*/
+proc contents data=&data_nm. out=_content_;
+proc print data=_content_;
+run;
+
+
+
+
+proc sql noprint;
+select count(*) into: nvars from _content_;
+quit;
+
+
+%put "No of Variables is  "&nvars. ;
+/* Note this can be be useful way to detect the value of macro variables.*/
+
+%do i=1 %to &nvars. ;
+	data _null_;
+	set _content_;
+	if _n_ = &i. then do;
+	        call symput("variable", name);
+	        call symput("var_type",type);
+					  end;
+	run;
+
+	%put "Variable is  " &variable. ;
+	%put "Variable Type is  " &var_type. ;
+
+
+proc sql;
+select count(distinct &variable) into: distinct_category from &data_nm.;
+quit;
+
+
+%put "ditinct categories are "&distinct_category;
+%end;
+/* Another way 
+	data _null_;
+	set _content_;
+
+	        call symput('var' || strip(_n_),Origin);
+	        call symput('var_tp' || strip(_n_),Type);
+
+	run;
+
+%do i=1 %to &nvars. ;
+
+	%put "Variable is  " &&var&i. ;
+	%put "Variable Type is  " &&var_tp&i. ;
+
+
+proc sql;
+select distinct(&var&i.) into: distinct_category from &data_nm.;
+quit;
+
+%end;*/
+%mend mult_macro_defn;
+
+option symbolgen mlogic mprint;
+%mult_macro_defn (SASHELP.Heart);
+
